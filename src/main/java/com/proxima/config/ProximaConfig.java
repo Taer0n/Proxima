@@ -6,7 +6,7 @@
 /*   By: Loïc <lbertran@student.42lyon.fr>                                    */
 /*                                                                            */
 /*   Created: 2020/11/06 11:27:36 by Loïc                                     */
-/*   Updated: 2020/11/06 11:27:36 by Loïc                                     */
+/*   Updated: 2020/11/06 13:26:48 by Loïc                                     */
 /*                                                                            */
 /* ************************************************************************** */
 package com.proxima.config;

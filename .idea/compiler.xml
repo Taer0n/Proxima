@@ -13,7 +13,6 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
-      <module name="Jerome" target="1.8" />
       <module name="Proxima" target="1.8" />
     </bytecodeTargetLevel>
   </component>

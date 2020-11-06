@@ -6,13 +6,12 @@
 /*   By: Loïc <lbertran@student.42lyon.fr>                                    */
 /*                                                                            */
 /*   Created: 2020/11/05 14:05:27 by Loïc                                     */
-/*   Updated: 2020/11/05 14:05:27 by Loïc                                     */
+/*   Updated: 2020/11/06 13:26:37 by Loïc                                     */
 /*                                                                            */
 /* ************************************************************************** */
 package com.proxima;
 
 import com.proxima.config.ProximaConfig;
-import com.proxima.utils.log.Logger;
 import lombok.Getter;
 import net.dv8tion.jda.bot.JDABot;
 import net.dv8tion.jda.core.AccountType;
