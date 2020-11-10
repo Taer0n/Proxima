@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
 import java.util.HashMap;
 
 public class ProximaConfig extends HashMap<String, String> {
@@ -59,7 +60,16 @@ public class ProximaConfig extends HashMap<String, String> {
         } catch (ParseException | IOException e) {
             e.printStackTrace();
         }
-        TOKEN = get("token");
+        Arrays.stream(getClass().getFields())
+                .filter(field -> !field.getName().equals("VERBOSE"))
+                .forEach(field -> {
+                    try {
+                        field.set(this, get(field.getName().toLowerCase()));
+                    } catch (IllegalAccessException e) {
+                        Logger.error("Failed to load config option " + field.getName() + ": field not found in config !");
+                        e.printStackTrace();
+                    }
+                });
     }
 
     /**
