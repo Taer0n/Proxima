@@ -12,11 +12,14 @@
 package com.proxima.config;
 
 import com.proxima.Constants;
+import com.proxima.utils.log.Logger;
+import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
@@ -24,45 +27,59 @@ import java.util.HashMap;
 public class ProximaConfig extends HashMap<String, String> {
 
     public boolean VERBOSE;
-    public String TOKEN = get("token");
+    public String TOKEN;
 
-    public ProximaConfig(boolean verbose)
-    {
-        File file = new File(Constants.CONFIG_PATH.toUri());
-        if (!file.exists())
-            createConfig(); //La config n'existe pas sur le disque donc on la cree
-
-        VERBOSE = verbose;
+    public ProximaConfig(boolean verbose) {
+        //La config n'existe pas sur le disque donc on la cree
+        if (!Files.exists(Constants.CONFIG_PATH)) {
+            try {
+                Files.createDirectories(Constants.CONFIG_PATH);
+                createConfig();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        load();
+        //VERBOSE = verbose;
+        VERBOSE = true; //temp
     }
 
     /**
      * Charge la config au lancement du bot
      */
-    public void load()
-    {
+    public void load() {
         JSONParser jsonParser = new JSONParser();
         try {
-            Object obj = jsonParser.parse(Constants.CONFIG_PATH.toString());
-        } catch (ParseException e) {
+            JSONObject jsonObject = (JSONObject) jsonParser.parse(new InputStreamReader(new FileInputStream(Constants.CONFIG_PATH.toString())));
+            jsonObject.keySet().forEach(key ->
+            {
+                put((String) key, (String) jsonObject.get(key));
+                Logger.info("(Config) " + key + '=' + jsonObject.get(key));
+            });
+        } catch (ParseException | IOException e) {
             e.printStackTrace();
         }
+        TOKEN = get("token");
     }
 
     /**
      * Sauvegarde la config (TODO: boolean async)
      */
-    public void save()
-    {
-
+    public void save() {
+        JSONObject jsonObject = new JSONObject();
+        keySet().stream().forEach(key -> jsonObject.put(key, get(key)));
+        Logger.info("Config saved successfully");
+        Logger.verbose(jsonObject.toJSONString());
     }
 
     /**
      * Copie la config du dossier resources du jar vers le disque lors de la premiere utilisation
      */
-    private void createConfig()
-    {
+    private void createConfig() {
         try {
-            Files.copy(getClass().getResourceAsStream("src/main/resources/ProximaConfig.json"), Constants.CONFIG_PATH, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(getClass().getClassLoader().getResourceAsStream("ProximaConfig.json"),
+                    Constants.CONFIG_PATH,
+                    StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             e.printStackTrace();
         }

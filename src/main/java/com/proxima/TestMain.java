@@ -1,9 +1,12 @@
 package com.proxima;
 
+import org.json.simple.JSONObject;
+
 public class TestMain {
 
     public static void main(String[] args) {
-        assert (true == false);
-        System.out.println("test");
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("token", "");
+        System.out.println(jsonObject.toJSONString());
     }
 }

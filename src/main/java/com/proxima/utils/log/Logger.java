@@ -13,6 +13,7 @@ package com.proxima.utils.log;
 
 import com.proxima.Constants;
 import com.proxima.Proxima;
+import com.proxima.utils.ExceptionUtils;
 
 import java.util.Date;
 
@@ -23,9 +24,9 @@ public class Logger {
      * @param message Le message à afficher
      * @param logType Le type de log (voir {@link LogType})
      */
-    public static void log(String message, LogType logType)
+    private static void log(String message, LogType logType)
     {
-        System.out.println('[' + Constants.DATE_FORMAT.format(new Date()) + "] [" + logType.displayName + ']' + message);
+        System.out.println('[' + Constants.DATE_FORMAT.format(new Date()) + "] [" + logType.displayName + "] " + message);
     }
 
     /**
@@ -63,6 +64,16 @@ public class Logger {
     {
         if (Proxima.getInstance().getConfig().VERBOSE)
             log(message, LogType.VERBOSE);
+    }
+
+    /**
+     * Affiche une stacktrace seulement si le verbose est actif
+     * @param throwable L'exception d'ou vient la stacktrace
+     */
+    public static void verboseStackTrace(Throwable throwable)
+    {
+        if (Proxima.getInstance().getConfig().VERBOSE)
+            log(ExceptionUtils.getStackTrace(throwable), LogType.VERBOSE);
     }
 
     enum LogType {

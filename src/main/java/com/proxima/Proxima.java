@@ -12,16 +12,16 @@
 package com.proxima;
 
 import com.proxima.config.ProximaConfig;
+import com.proxima.utils.ExceptionUtils;
+import com.proxima.utils.log.Logger;
 import lombok.Getter;
 import net.dv8tion.jda.bot.JDABot;
 import net.dv8tion.jda.core.AccountType;
 import net.dv8tion.jda.core.JDABuilder;
 import net.dv8tion.jda.core.entities.Game;
-import org.json.simple.JSONObject;
 
 import javax.security.auth.login.LoginException;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Getter
@@ -44,12 +44,20 @@ public class Proxima {
         instance = this;
         config = new ProximaConfig(verbose.get());
 
-        Objects.requireNonNull(config.TOKEN, "Bot token cannot be null");
+        if (config.TOKEN == null)
+        {
+            Logger.error("Bot token is not set, please define it in the config (" + Constants.CONFIG_PATH + ")");
+            System.exit(1);
+        }
 
         JDABuilder builder = new JDABuilder(AccountType.BOT).setToken(config.TOKEN);
         builder.setGame(Game.watching("Everything"));
-        bot = builder.buildBlocking().asBot();
-
+        try {
+            bot = builder.buildBlocking().asBot();
+        } catch (LoginException exception){
+            Logger.error(exception.getMessage());
+            Logger.verboseStackTrace(exception);
+        }
     }
 
     public static void main(String[] args)
@@ -57,14 +65,9 @@ public class Proxima {
         try {
             new Proxima(args);
         } catch (LoginException e) {
-
             e.printStackTrace();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("token", "");
-        System.out.println(jsonObject.toJSONString());
     }
 }
