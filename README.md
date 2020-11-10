@@ -1,7 +1,2 @@
 # Proxima
-
-Ici on va mettre une super description stylée en anglais et tout
-
-ouais
-yo
-sex
+A multipurpose Discord bot made in Java using JDA - Work in progress
