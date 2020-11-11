@@ -6,13 +6,12 @@
 /*   By: Loïc <lbertran@student.42lyon.fr>                                    */
 /*                                                                            */
 /*   Created: 2020/11/05 14:05:27 by Loïc                                     */
-/*   Updated: 2020/11/06 13:26:37 by Loïc                                     */
+/*   Updated: 2020/11/11 14:12:28 by Loïc                                     */
 /*                                                                            */
 /* ************************************************************************** */
 package com.proxima;
 
 import com.proxima.config.ProximaConfig;
-import com.proxima.utils.ExceptionUtils;
 import com.proxima.utils.log.Logger;
 import lombok.Getter;
 import net.dv8tion.jda.bot.JDABot;
@@ -29,7 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Proxima {
 
     private JDABot bot;
-    private ProximaConfig config;
+    private final ProximaConfig config;
     private static Proxima instance;
 
     public static Proxima getInstance(){ return instance; }
@@ -60,7 +59,7 @@ public class Proxima {
             Logger.verboseStackTrace(exception);
         }
 
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> shutdown()));
+        Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
 
         Scanner scanner = new Scanner(System.in);
         while (scanner.hasNextLine()) {
