@@ -70,6 +70,12 @@ public class ModuleManager {
     public void loadModule(File file, JSONObject jsonObject) {
         try {
             String mainClass = (String) jsonObject.get("main");
+            String moduleName = (String) jsonObject.get("name");
+            if (moduleName == null || mainClass == null)
+            {
+                Logger.error("Could not load module " + file.getName() + ": invalid module.json");
+                return;
+            }
             URLClassLoader child = new URLClassLoader(
                     new URL[]{file.toURI().toURL()},
                     this.getClass().getClassLoader()
@@ -78,6 +84,7 @@ public class ModuleManager {
             Object instance = clazz.newInstance();
             Method onEnable = clazz.getMethod("onEnable");
             onEnable.invoke(instance);
+            Logger.error("Successfuly loaded module " + moduleName + " (" + file.getName() + ')');
         } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException | MalformedURLException e) {
             Logger.verboseStackTrace(e);
             Logger.error("Could not load module " + file.getName() + ": invalid main in module.json ?");
