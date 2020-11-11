@@ -27,10 +27,13 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class ModuleManager {
+
+    private HashMap<Class, Object> loadedModules = new HashMap<>();
 
     /**
      * Charge tous les jar de modules presents dans le dossier user.dir/modules/
@@ -67,12 +70,16 @@ public class ModuleManager {
         }
     }
 
+    /**
+     * Charge un module
+     * @param file Le fichier du module
+     * @param jsonObject Le contenu du fichier 'module.json' du module en question parsé en JSON
+     */
     public void loadModule(File file, JSONObject jsonObject) {
         try {
             String mainClass = (String) jsonObject.get("main");
             String moduleName = (String) jsonObject.get("name");
-            if (moduleName == null || mainClass == null)
-            {
+            if (moduleName == null || mainClass == null) {
                 Logger.error("Could not load module " + file.getName() + ": invalid module.json");
                 return;
             }
@@ -84,10 +91,38 @@ public class ModuleManager {
             Object instance = clazz.newInstance();
             Method onEnable = clazz.getMethod("onEnable");
             onEnable.invoke(instance);
+            loadedModules.put(clazz, instance);
             Logger.info("Successfully loaded module " + moduleName + " (" + file.getName() + ')');
         } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException | MalformedURLException e) {
             Logger.verboseStackTrace(e);
             Logger.error("Could not load module " + file.getName() + ": invalid main in module.json ?");
+        }
+    }
+
+    /**
+     * Desactive tous les modules
+     */
+    public void disableModules() {
+        loadedModules.keySet().forEach(key -> disableModule(key));
+    }
+
+    /**
+     * Desactive un module
+     * @param moduleClass La main class du module a desactiver
+     */
+    public void disableModule(Class moduleClass) {
+        try {
+            if (!loadedModules.containsKey(moduleClass)) {
+                Logger.error("Tried to disable non-existent module " + moduleClass);
+                return;
+            }
+            Object instance = loadedModules.get(moduleClass);
+            Method onDisable = moduleClass.getMethod("onDisable");
+            onDisable.invoke(instance);
+            loadedModules.remove(moduleClass);
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+            Logger.verboseStackTrace(e);
+            Logger.error("Could not disable module " + moduleClass.getName() + ": " + e.getMessage());
         }
     }
 }

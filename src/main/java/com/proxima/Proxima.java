@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 package com.proxima;
 
+import com.proxima.api.modules.ModuleManager;
 import com.proxima.config.ProximaConfig;
 import com.proxima.utils.log.Logger;
 import lombok.Getter;
@@ -29,7 +30,10 @@ public class Proxima {
 
     private JDABot bot;
     private final ProximaConfig config;
+    private final ModuleManager moduleManager;
+
     private static Proxima instance;
+
 
     public static Proxima getInstance(){ return instance; }
 
@@ -43,6 +47,7 @@ public class Proxima {
 
         instance = this;
         config = new ProximaConfig(verbose.get());
+        moduleManager = new ModuleManager();
 
         if (config.TOKEN == null)
         {
@@ -59,6 +64,8 @@ public class Proxima {
             Logger.verboseStackTrace(exception);
         }
 
+        moduleManager.loadModules();
+
         Runtime.getRuntime().addShutdownHook(new Thread(this::shutdown));
 
         Scanner scanner = new Scanner(System.in);
@@ -66,7 +73,7 @@ public class Proxima {
             String input = scanner.nextLine();
             if (input.equalsIgnoreCase("stop")) { //TODO console command system
                 System.out.println("Shutting down...");
-                shutdown();
+                System.exit(0);
             }
         }
         scanner.close();
@@ -78,6 +85,7 @@ public class Proxima {
     }
 
     public void shutdown() {
+        moduleManager.disableModules();
         bot.getJDA().shutdown();
     }
 }
