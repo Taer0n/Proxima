@@ -6,7 +6,7 @@
 /*   By: Loïc <lbertran@student.42lyon.fr>                                    */
 /*                                                                            */
 /*   Created: 2020/11/11 15:42:04 by Loïc                                     */
-/*   Updated: 2020/11/11 15:42:04 by Loïc                                     */
+/*   Updated: 2020/11/11 17:03:23 by Loïc                                     */
 /*                                                                            */
 /* ************************************************************************** */
 package com.proxima.api.modules;
@@ -27,13 +27,14 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 public class ModuleManager {
 
-    private HashMap<Class, Object> loadedModules = new HashMap<>();
+    private List<LoadedModule> loadedModules = new ArrayList<>();
 
     /**
      * Charge tous les jar de modules presents dans le dossier user.dir/modules/
@@ -79,7 +80,8 @@ public class ModuleManager {
         try {
             String mainClass = (String) jsonObject.get("main");
             String moduleName = (String) jsonObject.get("name");
-            if (moduleName == null || mainClass == null) {
+            String moduleVersion = (String) jsonObject.get("version");
+            if (moduleName == null || mainClass == null || moduleVersion == null) {
                 Logger.error("Could not load module " + file.getName() + ": invalid module.json");
                 return;
             }
@@ -91,7 +93,7 @@ public class ModuleManager {
             Object instance = clazz.newInstance();
             Method onEnable = clazz.getMethod("onEnable");
             onEnable.invoke(instance);
-            loadedModules.put(clazz, instance);
+            loadedModules.add(new LoadedModule(moduleName, moduleVersion, file, clazz, instance));
             Logger.info("Successfully loaded module " + moduleName + " (" + file.getName() + ')');
         } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException | MalformedURLException e) {
             Logger.verboseStackTrace(e);
@@ -103,26 +105,37 @@ public class ModuleManager {
      * Desactive tous les modules
      */
     public void disableModules() {
-        loadedModules.keySet().forEach(key -> disableModule(key));
+        loadedModules.stream().forEach(loadedModule -> disableModule(loadedModule.getName()));
     }
 
     /**
      * Desactive un module
-     * @param moduleClass La main class du module a desactiver
+     * @param moduleName Le nom du module a desactiver
      */
-    public void disableModule(Class moduleClass) {
+    public void disableModule(String moduleName) {
         try {
-            if (!loadedModules.containsKey(moduleClass)) {
-                Logger.error("Tried to disable non-existent module " + moduleClass);
+            LoadedModule loadedModule = getModule(moduleName);
+            if (loadedModule == null) {
+                Logger.error("Tried to disable non-existent module " + moduleName);
                 return;
             }
-            Object instance = loadedModules.get(moduleClass);
-            Method onDisable = moduleClass.getMethod("onDisable");
+            Object instance = loadedModule.getModuleInstance();
+            Method onDisable = loadedModule.getMainClass().getMethod("onDisable");
             onDisable.invoke(instance);
-            loadedModules.remove(moduleClass);
+            loadedModules.remove(loadedModule);
         } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
             Logger.verboseStackTrace(e);
-            Logger.error("Could not disable module " + moduleClass.getName() + ": " + e.getMessage());
+            Logger.error("Could not disable module " + moduleName + ": " + e.getMessage());
         }
+    }
+
+    /**
+     * Recupere un module selon son nom
+     * @param name Le nom du module recherché
+     * @return Le module trouvé ou null
+     */
+    public LoadedModule getModule(String name)
+    {
+        return loadedModules.stream().filter(loadedModule -> loadedModule.getName().equalsIgnoreCase(name)).findFirst().orElse(null);
     }
 }
