@@ -84,7 +84,7 @@ public class ModuleManager {
             Object instance = clazz.newInstance();
             Method onEnable = clazz.getMethod("onEnable");
             onEnable.invoke(instance);
-            Logger.error("Successfuly loaded module " + moduleName + " (" + file.getName() + ')');
+            Logger.error("Successfully loaded module " + moduleName + " (" + file.getName() + ')');
         } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException | InstantiationException | InvocationTargetException | MalformedURLException e) {
             Logger.verboseStackTrace(e);
             Logger.error("Could not load module " + file.getName() + ": invalid main in module.json ?");
