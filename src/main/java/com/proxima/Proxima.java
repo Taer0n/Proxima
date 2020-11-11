@@ -22,6 +22,7 @@ import net.dv8tion.jda.core.entities.Game;
 
 import javax.security.auth.login.LoginException;
 import java.util.Arrays;
+import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Getter
@@ -33,7 +34,7 @@ public class Proxima {
 
     public static Proxima getInstance(){ return instance; }
 
-    public Proxima(String[] args) throws LoginException, InterruptedException {
+    public Proxima(String[] args) {
         AtomicBoolean verbose = new AtomicBoolean(false);
 
         Arrays.stream(args).forEach(arg -> {
@@ -54,20 +55,30 @@ public class Proxima {
         builder.setGame(Game.watching("Everything"));
         try {
             bot = builder.buildBlocking().asBot();
-        } catch (LoginException exception){
+        } catch (LoginException | InterruptedException exception){
             Logger.error(exception.getMessage());
             Logger.verboseStackTrace(exception);
         }
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> shutdown()));
+
+        Scanner scanner = new Scanner(System.in);
+        while (scanner.hasNextLine()) {
+            String input = scanner.nextLine();
+            if (input.equalsIgnoreCase("stop")) { //TODO console command system
+                System.out.println("Shutting down...");
+                shutdown();
+            }
+        }
+        scanner.close();
     }
 
     public static void main(String[] args)
     {
-        try {
-            new Proxima(args);
-        } catch (LoginException e) {
-            e.printStackTrace();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+        new Proxima(args);
+    }
+
+    public void shutdown() {
+        bot.getJDA().shutdown();
     }
 }
