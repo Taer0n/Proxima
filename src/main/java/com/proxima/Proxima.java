@@ -85,6 +85,7 @@ public class Proxima {
     }
 
     public void shutdown() {
+        config.save();
         moduleManager.disableModules();
         bot.getJDA().shutdown();
     }

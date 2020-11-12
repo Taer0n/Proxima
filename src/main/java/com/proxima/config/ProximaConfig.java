@@ -23,9 +23,8 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
-import java.util.HashMap;
 
-public class ProximaConfig extends HashMap<String, String> {
+public class ProximaConfig {
 
     public boolean VERBOSE;
     public String TOKEN;
@@ -52,24 +51,21 @@ public class ProximaConfig extends HashMap<String, String> {
         JSONParser jsonParser = new JSONParser();
         try {
             JSONObject jsonObject = (JSONObject) jsonParser.parse(new InputStreamReader(new FileInputStream(Constants.CONFIG_PATH.toString())));
-            jsonObject.keySet().forEach(key ->
-            {
-                put((String) key, (String) jsonObject.get(key));
-                Logger.info("(Config) " + key + '=' + jsonObject.get(key));
-            });
+            Arrays.stream(getClass().getFields())
+                    .filter(field -> !field.getName().equals("VERBOSE"))
+                    .forEach(field -> {
+                        try {
+                            field.set(this, jsonObject.get(field.getName().toLowerCase()));
+                            Logger.info("(Config) " + field.getName().toLowerCase() + '=' + jsonObject.get(field.getName().toLowerCase()));
+                        } catch (IllegalAccessException e) {
+                            Logger.error("Failed to load config option " + field.getName() + ": field not found in config !");
+                            e.printStackTrace();
+                        }
+                    });
         } catch (ParseException | IOException e) {
             e.printStackTrace();
         }
-        Arrays.stream(getClass().getFields())
-                .filter(field -> !field.getName().equals("VERBOSE"))
-                .forEach(field -> {
-                    try {
-                        field.set(this, get(field.getName().toLowerCase()));
-                    } catch (IllegalAccessException e) {
-                        Logger.error("Failed to load config option " + field.getName() + ": field not found in config !");
-                        e.printStackTrace();
-                    }
-                });
+
     }
 
     /**
@@ -77,7 +73,15 @@ public class ProximaConfig extends HashMap<String, String> {
      */
     public void save() {
         JSONObject jsonObject = new JSONObject();
-        keySet().stream().forEach(key -> jsonObject.put(key, get(key)));
+        Arrays.stream(getClass().getFields())
+                .filter(field -> !field.getName().equals("VERBOSE"))
+                .forEach(field -> {
+                    try {
+                        jsonObject.put(field.getName().toLowerCase(), field.get(this));
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    }
+                });
         Logger.info("Config saved successfully");
         Logger.verbose(jsonObject.toJSONString());
     }
