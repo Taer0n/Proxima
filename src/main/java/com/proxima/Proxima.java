@@ -49,7 +49,7 @@ public class Proxima {
         config = new ProximaConfig(verbose.get());
         moduleManager = new ModuleManager();
 
-        if (config.TOKEN == null)
+        if (config.TOKEN.equalsIgnoreCase(""))
         {
             Logger.error("Bot token is not set, please define it in the config (" + Constants.CONFIG_PATH + ")");
             System.exit(1);
